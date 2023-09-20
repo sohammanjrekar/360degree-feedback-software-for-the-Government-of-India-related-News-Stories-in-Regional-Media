@@ -1,3 +1,5 @@
+# settings_configuration/admin.py
 from django.contrib import admin
+from .models import LanguagePreference
 
-# Register your models here.
+admin.site.register(LanguagePreference)
