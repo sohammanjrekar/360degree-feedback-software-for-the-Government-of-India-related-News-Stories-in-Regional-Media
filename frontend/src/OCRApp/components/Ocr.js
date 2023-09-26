@@ -1,39 +1,50 @@
-// Your React component file
-
+// src/App.js
 import React, { useState } from 'react';
-import axios from 'axios';
 
-function PerformOCRComponent() {
-    const [extractedText, setExtractedText] = useState('');
-    const [selectedImage, setSelectedImage] = useState(null);
+function Ocr() {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [cleanedText, setCleanedText] = useState('');
 
-    const handleImageChange = (event) => {
-        setSelectedImage(event.target.files[0]);
-    };
+  const handleFileChange = (e) => {
+    setSelectedFile(e.target.files[0]);
+  };
 
-    const performOCR = () => {
-        const formData = new FormData();
-        formData.append('image', selectedImage);
+  const handleUpload = async () => {
+    if (!selectedFile) return;
 
-        axios.post('/api/perform-ocr/', formData)
-            .then((response) => {
-                setExtractedText(response.data.text);
-            })
-            .catch((error) => {
-                console.error('Error performing OCR:', error);
-            });
-    };
+    const formData = new FormData();
+    formData.append('image', selectedFile);
 
-    return (
+    try {
+      const response = await fetch('http://localhost:8000/ocr/ocr-translation/', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCleanedText(data.cleaned_text);
+      } else {
+        console.error('Error:', response.statusText);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  return (
+    <div className="App">
+      <h1>OCR and Translation</h1>
+      <input type="file" accept=".png, .jpg, .jpeg" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload</button>
+      {cleanedText && (
         <div>
-            <input type="file" accept="image/*" onChange={handleImageChange} />
-            <button onClick={performOCR}>Perform OCR</button>
-            <div>
-                <h2>Extracted Text</h2>
-                <p>{extractedText}</p>
-            </div>
+          <h2>Cleaned Text</h2>
+          <p>{cleanedText}</p>
         </div>
-    );
+      )}
+    </div>
+  );
 }
 
-export default PerformOCRComponent;
+export default Ocr;

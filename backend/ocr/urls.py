@@ -1,8 +1,7 @@
-# ocr_app/urls.py
-
+# ocr_translation/urls.py
 from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('api/perform-ocr/', views.perform_ocr, name='perform-ocr'),
+    path('ocr-translation/', views.ocr_translation_view, name='ocr-translation'),
 ]

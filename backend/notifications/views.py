@@ -1,15 +1,20 @@
-# Example logic for sending an SMS notification
-from twilio.rest import Client  # Use Twilio or another SMS service
+# notification_app/views.py
 
-def send_sms_notification(phone_number, message):
-    account_sid = 'your_account_sid'
-    auth_token = 'your_auth_token'
-    client = Client(account_sid, auth_token)
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from .utils import send_sms_notification
 
-    message = client.messages.create(
-        body=message,
-        from_='+1234567890',  # Your Twilio phone number
-        to=phone_number
-    )
+class NotificationAPIView(APIView):
+    def post(self, request):
+        data = request.data
 
-    return message.sid
+        # Extract recipient phone number and message from data
+        phone_number = data.get('phone_number')
+        message = data.get('message')
+
+        # Send the notification
+        send_sms_notification(phone_number, message)
+
+        return Response({'message': 'Notification sent successfully'})
+
+

@@ -1,31 +1,53 @@
-# ocr_app/views.py
-
-from django.http import JsonResponse
+# ocr_translation/views.py
 import pytesseract
-from PIL import Image
+from googletrans import Translator
+import re
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
-def perform_ocr(request):
-    if request.method == 'POST':
-        image = request.FILES['image']
+# Path to the Tesseract executable (adjust as needed)
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
+# List of languages to consider (Marathi, Urdu, Tamil, etc.)
+languages = [
+    "mar", "urd", "tam", "eng", "asm", "ben", "guj", "hin", "kan",
+    "kas", "kok", "mal", "mni", "mar", "nep", "ori", "pan", "san",
+    "snd", "tam", "tel", "urd", "bod", "sat", "mai", "dgo"
+]  # ISO 639-2 language codes
+
+@csrf_exempt
+def ocr_translation_view(request):
+    if request.method == 'POST' and request.FILES.get('image'):
         try:
-            # Perform OCR on the uploaded image
-            extracted_text = perform_ocr_on_image(image)
+            # Open the image using PIL
+            image = Image.open(request.FILES['image'])
 
-            # Create an OCRData object and save it to the database
-            ocr_data = OCRData(image=image, extracted_text=extracted_text)
-            ocr_data.save()
+            # Perform OCR and specify the language(s)
+            recognized_text = pytesseract.image_to_string(image, lang="+".join(languages))
 
-            return JsonResponse({'message': 'OCR performed successfully', 'text': extracted_text})
+            # Initialize the Translator
+            translator = Translator()
+
+            # Translate the recognized text to English
+            english_translation = translator.translate(recognized_text, src='auto', dest='en')
+
+            # Clean the text
+            cleaned_text = clean_text(english_translation.text)
+
+            return JsonResponse({'cleaned_text': cleaned_text})
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=400)
-    return JsonResponse({'error': 'Invalid request method'}, status=405)
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request'}, status=400)
 
-def perform_ocr_on_image(image):
-    # Configure Tesseract as needed
-    pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-    
-    # Perform OCR on the image
-    img = Image.open(image)
-    extracted_text = pytesseract.image_to_string(img)
+def clean_text(text):
+    # Define a regular expression pattern to remove non-alphanumeric characters
+    pattern = re.compile(r'[^a-zA-Z0-9\s]+')
 
-    return extracted_text
+    # Use the pattern to replace unwanted characters with whitespace
+    cleaned_text = re.sub(pattern, ' ', text)
+
+    # Remove extra whitespace and trim the text
+    cleaned_text = ' '.join(cleaned_text.split())
+
+    return cleaned_text
