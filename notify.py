@@ -14,7 +14,7 @@ RECIPIENT_PHONE_NUMBER = '+917045208474'
 SMTP_SERVER = 'smtp.gmail.com'
 SMTP_PORT = 587
 SMTP_EMAIL = 'sohammanjreKar@eng.rizvi.edu.in'
-SMTP_PASSWORD = 'Soham123@@'
+SMTP_PASSWORD = ''
 RECIPIENT_EMAIL = 'mrsohammanjreKar@gmail.com'
 
 def send_sms_notification():
